@@ -1,0 +1,33 @@
+All right. Well, Hi. I'm here today with Martin Casado, who's pretty well known as a pioneer in the world of software defined networking these days, also well known as a venture capitalist.
+But actually he has a really interesting story to tell about delivering wireless access, internet access to remote rural communities.
+So, Martin, maybe you could just start by telling us about what's the problem space that you're going after.
+Sure. So, when it comes to rural connectivity, which is clearly a global problem, as connectivity is a basic utility,
+particularly for like, you know, educational autonomy or economic autonomy, and for many that are tackling this problem, they're kind of lost in Sub-Saharan Africa, or Amazonia, or something like that,
+where like these are very real problems with bringing electricity, or bringing backhaul.
+However, it turns out that there's a huge problem just in the United States of this.
+So, you actually don't have to go around the globe to tackle this problem,
+where you have large swaths of the population that are under-connected or unconnected, even though that there is electricity,
+and even though that there's backhaul close by.
+One of the examples of this is the Native American community. So, these, you know, these reservations are effectively sovereign lands,
+and in some of the more remote ones, you'll have thirty percent of the population having connectivity. So, seventy percent is under-connected.
+And so, what we do is we bring cellular connectivity to these... these indigenous areas in the United States.
+And, I guess, when you say "we", it's MuralNet, which is this non-profit that's driving this.
+One question I had for you is, you know, we often hear about people using Wi-Fi to try to do this, solve this problem. Why did you go down the cellular path?
+Right, yeah, actually... So we actually started by looking at Wi-Fi. It, you know, it turns out that so much of the problem with rural connectivity is dealing with distance of propagation,
+the ability to penetrate things like foliage, and stuff like power density, like, you know, how much power does it require to go like a certain distance.
+And licensed spectrum tends to be pretty optimal for rural deployments. In some of these areas you'll have, you know, a few houses per square mile, right, and that's just not the point of the design space that Wi-Fi was really focused on.
+And so, you want license spectrum. As you know, Magma is very flexible on the spectrums. It includes... this includes all kinds of spectrum.
+So, it's kind of... we had to do a cellular type solution.
+Yeah. And then why go with Magma, rather than some more established, you know, commercial offering?
+Right, yeah. So, we looked at that too. So, so it turns out, you know... very few of the problems with remote connectivity are actually like purely technical.
+They tend to be the intersection of technology and economics, and this is one of them,
+which is in order for this to be solvent, that is to actually, you know, be able to pay for itself, or to to be independently viable, you have to bring down the cost by about an order of magnitude.
+And so, if you're buying this very expensive gear and running this very expensive gear, it was just too expensive.
+Magma, on the other hand, has two benefits: it allows you to have lower CAPEX, right, you know, so you can do cheaper gear, you're not paying for the software,
+but also, the actual management tends to be far simpler because it's cloud-managed.
+So, you can actually build kind of more of an automated system. So, it just drives down the cost so much.
+Yeah, that's great. So you really hit on some key points of Magma there, like it doesn't really care about what spectrum, but will certainly work on licensed spectrum,
+easy to manage, and being open source on commodity hardware drives down all the costs.
+So, that's great. Fantastic use case. People who want to know more about this should go and read up about MuralNet delivering their service from across the US in remote communities.
+And, Martin, thanks very much for your time.
+It's a real pleasure! Thank you!

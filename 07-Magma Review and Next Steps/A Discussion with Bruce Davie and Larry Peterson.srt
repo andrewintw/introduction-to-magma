@@ -1,0 +1,108 @@
+0
+00:00:01,360 --> 00:00:05,077
+Well, we're just about at the end of this "Introduction to Magma" course,
+
+1
+00:00:05,077 --> 00:00:10,125
+and so I'm back here with Larry Peterson just to summarize a few of the key points.
+
+2
+00:00:10,125 --> 00:00:16,985
+So, maybe I'll start with you, Larry. What do you find were the things that really jumped out to you over the course of this... of this course?
+
+3
+00:00:17,651 --> 00:00:26,320
+Yeah, yeah... thanks, Bruce! You know, you know, for me, for years now, we've been hearing it that software is eating the world, and to me, that means that the cloud is eating the world.
+
+4
+00:00:26,320 --> 00:00:30,864
+And I think we're finally seeing now that the cloud is also eating the mobile access network.
+
+5
+00:00:30,864 --> 00:00:38,281
+The edge of the cloud is really moving out to the very edge, and it's going to subsume the mobile core. And that's exactly what Magma's doing.
+
+6
+00:00:38,281 --> 00:00:44,876
+Yeah, so absolutely, so, you know, this is a cloud-native approach to mobile core networking, and I think it's a key point.
+
+7
+00:00:44,876 --> 00:00:49,701
+This is not just about, you know, we open sourced a standard implementation of a mobile core.
+
+8
+00:00:49,701 --> 00:00:54,745
+It's a cloud native approach, and that brings with it a whole lot of... of interesting benefits.
+
+9
+00:00:54,745 --> 00:01:02,202
+So, for example, we see the very modular approach where everything is...every, every service is restartable,
+
+10
+00:01:02,202 --> 00:01:09,584
+you can have small fault domains, and the.. just the expectation that something will break, but it doesn't bring down the whole service,
+
+11
+00:01:09,584 --> 00:01:17,440
+you know, even things like, you know, a single access gateway could go down, but that will only affect a handful of base stations rather than the whole network.
+
+12
+00:01:17,440 --> 00:01:23,066
+A single service within the access gateway could crash, but it's restartable, and the rest of the services keep on running.
+
+13
+00:01:23,066 --> 00:01:26,001
+So, very much a sort of high availability approach,
+
+14
+00:01:26,400 --> 00:01:31,754
+much as what we've seen in cloud native... Is something... anything else that jumped out?
+
+15
+00:01:32,822 --> 00:01:43,889
+Well, I like the fact that we're building something that's separate from the specification. You get it right, you know, you have to deal with mobility, you have to deal with authentication, you have to deal with some fundamental issues
+
+16
+00:01:43,889 --> 00:01:47,738
+that are the same issues no matter what the radio technology is.
+
+17
+00:01:47,738 --> 00:01:55,174
+You deal with those issues and you postpone speaking 3GPP to the latest possible moment, when you have to be interoperable.
+
+18
+00:01:55,174 --> 00:02:02,174
+Right! That's a great point that, you know, this is a heterogeneous approach. Any radio technology, whether it's 3G, 4G, 5G, WiFi, CBRS,
+
+19
+00:02:02,174 --> 00:02:10,988
+any of those technologies can be used. We terminate those very radio-specific protocols right at the edge,
+
+20
+00:02:10,988 --> 00:02:17,803
+and then we have a core which is essentially agnostic to those things, and interoperates with whatever standards we need,
+
+21
+00:02:17,803 --> 00:02:23,374
+but we've really cut it a different way from how traditional 3GPP implementations do it.
+
+22
+00:02:23,374 --> 00:02:34,966
+And so, we have a much more flexible solution, and to me, it's a... it's a much more... it is a much more kind of systems approach to building this sort of network,
+
+23
+00:02:34,966 --> 00:02:48,562
+where you don't have all the details of say 4G sort of trickling all the way through the architecture, the fact that they're really well encapsulated and isolated to the edges into very specific small components within the system.
+
+24
+00:02:49,520 --> 00:02:54,185
+And then, the other one I think that sort of jumped out to me is, you know, you and I worked on SDN for a long time.
+
+25
+00:02:54,185 --> 00:03:06,880
+This is a very SDN-like approach, where we go from the device level management of individual network components to a network level management where we manage everything through the central API of the Orchestrator.
+
+26
+00:03:06,880 --> 00:03:17,840
+Obviously, there's a lot more detail that we won't go over again now, but hopefully you found this course valuable and good luck when you go on to the final exam for those of you taking that!
+

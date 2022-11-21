@@ -1,0 +1,56 @@
+0
+00:00:02,080 --> 00:00:06,687
+Hi, I'm Bruce Davey, and I'm here with my longtime collaborator Larry Peterson.
+
+1
+00:00:06,687 --> 00:00:11,382
+And  we're going to be teaching you this course on "Introduction to Magma".
+
+2
+00:00:11,382 --> 00:00:17,025
+My background is... I'm a networking person from way back over 30 years in the networking industry,
+
+3
+00:00:17,025 --> 00:00:22,546
+and for about the last 10 years, I've been involved in software defined networking and worked on some source projects.
+
+4
+00:00:22,546 --> 00:00:29,230
+I'm really excited to be involved in the Magma project and I think you're going to find a lot of interesting technology in this project.
+
+5
+00:00:29,230 --> 00:00:31,913
+Let me just hand it over to Larry to introduce himself.
+
+6
+00:00:32,400 --> 00:00:41,112
+Yeah, thanks Bruce. Yeah, we go back many years, and I've been working mostly in universities on research projects related to the internet and cloud technologies.
+
+7
+00:00:41,112 --> 00:00:46,080
+The last few years I've been with the Open Networking Foundation and we're working on open source software,
+
+8
+00:00:46,080 --> 00:00:52,243
+both at the edge cloud, and a lot of the different access technologies, passive optical networks, 4G, 5G...
+
+9
+00:00:52,243 --> 00:00:57,053
+and so, Magma really brings all of that together. And I'm looking forward to telling you all about it.
+
+10
+00:00:57,635 --> 00:01:02,549
+Thanks, Larry. So, I think this is going to be a great course. We've really enjoyed getting involved in this project.
+
+11
+00:01:02,549 --> 00:01:10,792
+We think it has enormous potential to drive forward the open source approaches to mobile networking,
+
+12
+00:01:10,792 --> 00:01:13,785
+and you'll find out lots more about it in the upcoming material.
+
+13
+00:01:13,785 --> 00:01:17,600
+So, I hope you find it useful and enjoyable!
+

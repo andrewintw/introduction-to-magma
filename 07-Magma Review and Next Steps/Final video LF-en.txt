@@ -1,0 +1,27 @@
+Well, we're just about at the end of this "Introduction to Magma" course,
+and so I'm back here with Larry Peterson just to summarize a few of the key points.
+So, maybe I'll start with you, Larry. What do you find were the things that really jumped out to you over the course of this... of this course?
+Yeah, yeah... thanks, Bruce! You know, you know, for me, for years now, we've been hearing it that software is eating the world, and to me, that means that the cloud is eating the world.
+And I think we're finally seeing now that the cloud is also eating the mobile access network.
+The edge of the cloud is really moving out to the very edge, and it's going to subsume the mobile core. And that's exactly what Magma's doing.
+Yeah, so absolutely, so, you know, this is a cloud-native approach to mobile core networking, and I think it's a key point.
+This is not just about, you know, we open sourced a standard implementation of a mobile core.
+It's a cloud native approach, and that brings with it a whole lot of... of interesting benefits.
+So, for example, we see the very modular approach where everything is...every, every service is restartable,
+you can have small fault domains, and the.. just the expectation that something will break, but it doesn't bring down the whole service,
+you know, even things like, you know, a single access gateway could go down, but that will only affect a handful of base stations rather than the whole network.
+A single service within the access gateway could crash, but it's restartable, and the rest of the services keep on running.
+So, very much a sort of high availability approach,
+much as what we've seen in cloud native... Is something... anything else that jumped out?
+Well, I like the fact that we're building something that's separate from the specification. You get it right, you know, you have to deal with mobility, you have to deal with authentication, you have to deal with some fundamental issues
+that are the same issues no matter what the radio technology is.
+You deal with those issues and you postpone speaking 3GPP to the latest possible moment, when you have to be interoperable.
+Right! That's a great point that, you know, this is a heterogeneous approach. Any radio technology, whether it's 3G, 4G, 5G, WiFi, CBRS,
+any of those technologies can be used. We terminate those very radio-specific protocols right at the edge,
+and then we have a core which is essentially agnostic to those things, and interoperates with whatever standards we need,
+but we've really cut it a different way from how traditional 3GPP implementations do it.
+And so, we have a much more flexible solution, and to me, it's a... it's a much more... it is a much more kind of systems approach to building this sort of network,
+where you don't have all the details of say 4G sort of trickling all the way through the architecture, the fact that they're really well encapsulated and isolated to the edges into very specific small components within the system.
+And then, the other one I think that sort of jumped out to me is, you know, you and I worked on SDN for a long time.
+This is a very SDN-like approach, where we go from the device level management of individual network components to a network level management where we manage everything through the central API of the Orchestrator.
+Obviously, there's a lot more detail that we won't go over again now, but hopefully you found this course valuable and good luck when you go on to the final exam for those of you taking that!

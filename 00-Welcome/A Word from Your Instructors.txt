@@ -1,0 +1,14 @@
+Hi, I'm Bruce Davey, and I'm here with my longtime collaborator Larry Peterson.
+And  we're going to be teaching you this course on "Introduction to Magma".
+My background is... I'm a networking person from way back over 30 years in the networking industry,
+and for about the last 10 years, I've been involved in software defined networking and worked on some source projects.
+I'm really excited to be involved in the Magma project and I think you're going to find a lot of interesting technology in this project.
+Let me just hand it over to Larry to introduce himself.
+Yeah, thanks Bruce. Yeah, we go back many years, and I've been working mostly in universities on research projects related to the internet and cloud technologies.
+The last few years I've been with the Open Networking Foundation and we're working on open source software,
+both at the edge cloud, and a lot of the different access technologies, passive optical networks, 4G, 5G...
+and so, Magma really brings all of that together. And I'm looking forward to telling you all about it.
+Thanks, Larry. So, I think this is going to be a great course. We've really enjoyed getting involved in this project.
+We think it has enormous potential to drive forward the open source approaches to mobile networking,
+and you'll find out lots more about it in the upcoming material.
+So, I hope you find it useful and enjoyable!

@@ -1,0 +1,45 @@
+Right, well, I'm here now with Amar Padmanabhan, who's one of the founders and lead architects for the Magma project.
+And Amar works at Facebook and has made many, many contributions to the Magma project. And so, I'm going to ask him to talk us through some of the architectural principles of Magma.
+But first, Amar, just tell me why did you start the Magma project in the first place.
+Yeah. So, the goal of the Magma project and, you know, the idea behind connectivity as a whole,
+like Facebook is to bring more people online to a faster internet.
+And so, the problem of bringing more people onto a faster internet is actually a problem of heterogeneity.
+So, if you look at the landscape of users, people are coming onto the internet either over Wi-Fi, either over LTE, or 5G and depending on where they're coming onto the internet,
+the backhaul is different. Like, if you're in rural Mexico, you're probably coming over a satellite link;
+if you're in like downtown New York, you have fiber access.
+So, and then, the third aspect is that even the business models are different.
+So, depending on where you are, the scale and the size of the operator that you're working with looks very different.
+And 3GPP architectures historically have been like pretty one-size-fits-all,
+and so this was sort of the real reason why we started Magma, which was that "Okay, how do we take this one-size-fits-all and try and solve for the problem of heterogeneity?"
+Fantastic. And, you know, I've spent a fair bit of time looking at Magma, and clearly you've made a number of architectural choices that are quite different from a traditional 3GPP architecture,
+so what would you highlight as the key sort of architectural principles behind Magma?
+So, the primary one with Magma, which actually ties back to the heterogeneity point,
+is what we call as the axis abstraction. So, we try to insulate the rest of the network from the actual generation of radio technology that is connecting back into the network.
+So, if you look at Magma, regardless of whether you're connecting from a Wi-Fi access point, or LTE, CBRS shared spectrum, or 5G,
+the rest of the Magma network looks the same and the access technology is abstracted away from the bulk of the implementation.
+And so, I think that is the primary one that we've been looking at.
+Great! And I know another thing that stands out to me is a really different approach to fault domains, compared to what we normally see in telco architectures. Would you say something about that?
+Yeah. So, this is actually one of the inspiration points from even like working in Facebook and the Facebook data center principle itself is that we don't have large fault domains. So,
+at Facebook, a bulk of the data center is designed with the assumption that failure is going to happen,
+as opposed to having 99.99 reliability.
+So, the way that we solve that is by moving things into software so we can be agile and address failures fast,
+as well as creating small fault domains so where there are issues that happen in the network, [they] don't take down a large part of the network.
+This is a little bit different from the existing sort of monolithic or large appliance-based telco architectures,
+where each node is handling a very large volume of connections.
+Yeah, it's very much like the move from sort of mainframe compute architectures to cloud native architectures,
+where it's lots of small things that you can scale out, and that they, you know... any one of them might fail, but the whole system keeps on running,
+and it's obviously much easier to do things like upgrade.
+And I think the other thing that's very interesting is about how fault management and configuration, all those kind of traditional telco management tasks
+are also quite different in Magma. So, what can you say about that?
+Yeah. So, the way that we like to think about that is with Magma, we're sort of trying to move away from a device-centric way of managing things to more of a network-centric way of managing things.
+What this means is that each device in a Magma deployment makes itself fully introspectible
+and exposes its internal state, be it like configuration, be it like monitoring, or statistics, and events.
+And then, we have purposeful systems in the Orchestrator that are handling all of these... all of this flow of information
+to build a like sort of a network-level view of management.
+And this is very different than a traditional sort of a device-centric way of doing things, where each device itself is implementing its own management claim.
+Yeah, and honestly, that's very similar to a lot of the things you and I worked on back in our early days doing SDN and network virtualization,
+like moving away from managing individual network devices to managing a whole network.
+So, we definitely see some of that in the Magma architecture.
+Well this is great. I think it gives people a lot of kind of the key guide posts to look at as we... as we go forward in the course.
+And thanks a lot for coming and joining us today.
+Thank you very much, Bruce!

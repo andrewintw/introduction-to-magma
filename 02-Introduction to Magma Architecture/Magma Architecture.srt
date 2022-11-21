@@ -1,0 +1,180 @@
+0
+00:00:02,000 --> 00:00:08,863
+Right, well, I'm here now with Amar Padmanabhan, who's one of the founders and lead architects for the Magma project.
+
+1
+00:00:08,863 --> 00:00:18,480
+And Amar works at Facebook and has made many, many contributions to the Magma project. And so, I'm going to ask him to talk us through some of the architectural principles of Magma.
+
+2
+00:00:18,480 --> 00:00:23,094
+But first, Amar, just tell me why did you start the Magma project in the first place.
+
+3
+00:00:24,080 --> 00:00:31,360
+Yeah. So, the goal of the Magma project and, you know, the idea behind connectivity as a whole,
+
+4
+00:00:31,360 --> 00:00:36,781
+like Facebook is to bring more people online to a faster internet.
+
+5
+00:00:36,781 --> 00:00:44,865
+And so, the problem of bringing more people onto a faster internet is actually a problem of heterogeneity.
+
+6
+00:00:44,865 --> 00:00:57,547
+So, if you look at the landscape of users, people are coming onto the internet either over Wi-Fi, either over LTE, or 5G and depending on where they're coming onto the internet,
+
+7
+00:00:57,547 --> 00:01:02,732
+the backhaul is different. Like, if you're in rural Mexico, you're probably coming over a satellite link;
+
+8
+00:01:02,732 --> 00:01:05,871
+if you're in like downtown New York, you have fiber access.
+
+9
+00:01:05,871 --> 00:01:10,215
+So, and then, the third aspect is that even the business models are different.
+
+10
+00:01:10,215 --> 00:01:17,983
+So, depending on where you are, the scale and the size of the operator that you're working with looks very different.
+
+11
+00:01:17,983 --> 00:01:23,731
+And 3GPP architectures historically have been like pretty one-size-fits-all,
+
+12
+00:01:23,731 --> 00:01:36,960
+and so this was sort of the real reason why we started Magma, which was that "Okay, how do we take this one-size-fits-all and try and solve for the problem of heterogeneity?"
+
+13
+00:01:36,960 --> 00:01:47,308
+Fantastic. And, you know, I've spent a fair bit of time looking at Magma, and clearly you've made a number of architectural choices that are quite different from a traditional 3GPP architecture,
+
+14
+00:01:47,308 --> 00:01:51,778
+so what would you highlight as the key sort of architectural principles behind Magma?
+
+15
+00:01:52,800 --> 00:01:59,440
+So, the primary one with Magma, which actually ties back to the heterogeneity point,
+
+16
+00:01:59,440 --> 00:02:12,000
+is what we call as the axis abstraction. So, we try to insulate the rest of the network from the actual generation of radio technology that is connecting back into the network.
+
+17
+00:02:12,000 --> 00:02:20,549
+So, if you look at Magma, regardless of whether you're connecting from a Wi-Fi access point, or LTE, CBRS shared spectrum, or 5G,
+
+18
+00:02:20,549 --> 00:02:29,522
+the rest of the Magma network looks the same and the access technology is abstracted away from the bulk of the implementation.
+
+19
+00:02:29,522 --> 00:02:33,337
+And so, I think that is the primary one that we've been looking at.
+
+20
+00:02:33,337 --> 00:02:42,720
+Great! And I know another thing that stands out to me is a really different approach to fault domains, compared to what we normally see in telco architectures. Would you say something about that?
+
+21
+00:02:43,760 --> 00:02:56,709
+Yeah. So, this is actually one of the inspiration points from even like working in Facebook and the Facebook data center principle itself is that we don't have large fault domains. So,
+
+22
+00:02:56,709 --> 00:03:03,840
+at Facebook, a bulk of the data center is designed with the assumption that failure is going to happen,
+
+23
+00:03:03,840 --> 00:03:07,536
+as opposed to having 99.99 reliability.
+
+24
+00:03:07,536 --> 00:03:14,307
+So, the way that we solve that is by moving things into software so we can be agile and address failures fast,
+
+25
+00:03:14,307 --> 00:03:23,562
+as well as creating small fault domains so where there are issues that happen in the network, [they] don't take down a large part of the network.
+
+26
+00:03:23,562 --> 00:03:32,416
+This is a little bit different from the existing sort of monolithic or large appliance-based telco architectures,
+
+27
+00:03:32,416 --> 00:03:36,392
+where each node is handling a very large volume of connections.
+
+28
+00:03:36,392 --> 00:03:41,292
+Yeah, it's very much like the move from sort of mainframe compute architectures to cloud native architectures,
+
+29
+00:03:41,292 --> 00:03:48,264
+where it's lots of small things that you can scale out, and that they, you know... any one of them might fail, but the whole system keeps on running,
+
+30
+00:03:48,264 --> 00:03:51,178
+and it's obviously much easier to do things like upgrade.
+
+31
+00:03:51,412 --> 00:03:58,640
+And I think the other thing that's very interesting is about how fault management and configuration, all those kind of traditional telco management tasks
+
+32
+00:03:58,640 --> 00:04:02,629
+are also quite different in Magma. So, what can you say about that?
+
+33
+00:04:05,200 --> 00:04:16,800
+Yeah. So, the way that we like to think about that is with Magma, we're sort of trying to move away from a device-centric way of managing things to more of a network-centric way of managing things.
+
+34
+00:04:16,800 --> 00:04:23,551
+What this means is that each device in a Magma deployment makes itself fully introspectible
+
+35
+00:04:23,760 --> 00:04:32,857
+and exposes its internal state, be it like configuration, be it like monitoring, or statistics, and events.
+
+36
+00:04:32,857 --> 00:04:41,115
+And then, we have purposeful systems in the Orchestrator that are handling all of these... all of this flow of information
+
+37
+00:04:41,115 --> 00:04:47,111
+to build a like sort of a network-level view of management.
+
+38
+00:04:47,111 --> 00:04:55,713
+And this is very different than a traditional sort of a device-centric way of doing things, where each device itself is implementing its own management claim.
+
+39
+00:04:55,713 --> 00:05:02,640
+Yeah, and honestly, that's very similar to a lot of the things you and I worked on back in our early days doing SDN and network virtualization,
+
+40
+00:05:02,640 --> 00:05:07,120
+like moving away from managing individual network devices to managing a whole network.
+
+41
+00:05:07,120 --> 00:05:10,268
+So, we definitely see some of that in the Magma architecture.
+
+42
+00:05:10,268 --> 00:05:16,400
+Well this is great. I think it gives people a lot of kind of the key guide posts to look at as we... as we go forward in the course.
+
+43
+00:05:16,400 --> 00:05:18,892
+And thanks a lot for coming and joining us today.
+
+44
+00:05:18,892 --> 00:05:22,240
+Thank you very much, Bruce!
+

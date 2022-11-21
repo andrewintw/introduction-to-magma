@@ -1,0 +1,132 @@
+0
+00:00:01,360 --> 00:00:11,125
+All right. Well, Hi. I'm here today with Martin Casado, who's pretty well known as a pioneer in the world of software defined networking these days, also well known as a venture capitalist.
+
+1
+00:00:11,125 --> 00:00:20,135
+But actually he has a really interesting story to tell about delivering wireless access, internet access to remote rural communities.
+
+2
+00:00:20,135 --> 00:00:24,476
+So, Martin, maybe you could just start by telling us about what's the problem space that you're going after.
+
+3
+00:00:24,476 --> 00:00:32,945
+Sure. So, when it comes to rural connectivity, which is clearly a global problem, as connectivity is a basic utility,
+
+4
+00:00:32,945 --> 00:00:45,126
+particularly for like, you know, educational autonomy or economic autonomy, and for many that are tackling this problem, they're kind of lost in Sub-Saharan Africa, or Amazonia, or something like that,
+
+5
+00:00:45,126 --> 00:00:49,638
+where like these are very real problems with bringing electricity, or bringing backhaul.
+
+6
+00:00:51,040 --> 00:00:55,040
+However, it turns out that there's a huge problem just in the United States of this.
+
+7
+00:00:55,040 --> 00:00:58,682
+So, you actually don't have to go around the globe to tackle this problem,
+
+8
+00:00:58,682 --> 00:01:05,416
+where you have large swaths of the population that are under-connected or unconnected, even though that there is electricity,
+
+9
+00:01:05,416 --> 00:01:08,278
+and even though that there's backhaul close by.
+
+10
+00:01:08,278 --> 00:01:16,296
+One of the examples of this is the Native American community. So, these, you know, these reservations are effectively sovereign lands,
+
+11
+00:01:16,640 --> 00:01:24,170
+and in some of the more remote ones, you'll have thirty percent of the population having connectivity. So, seventy percent is under-connected.
+
+12
+00:01:24,170 --> 00:01:32,480
+And so, what we do is we bring cellular connectivity to these... these indigenous areas in the United States.
+
+13
+00:01:33,200 --> 00:01:38,017
+And, I guess, when you say "we", it's MuralNet, which is this non-profit that's driving this.
+
+14
+00:01:38,017 --> 00:01:46,668
+One question I had for you is, you know, we often hear about people using Wi-Fi to try to do this, solve this problem. Why did you go down the cellular path?
+
+15
+00:01:46,668 --> 00:01:57,390
+Right, yeah, actually... So we actually started by looking at Wi-Fi. It, you know, it turns out that so much of the problem with rural connectivity is dealing with distance of propagation,
+
+16
+00:01:57,390 --> 00:02:06,281
+the ability to penetrate things like foliage, and stuff like power density, like, you know, how much power does it require to go like a certain distance.
+
+17
+00:02:06,281 --> 00:02:19,083
+And licensed spectrum tends to be pretty optimal for rural deployments. In some of these areas you'll have, you know, a few houses per square mile, right, and that's just not the point of the design space that Wi-Fi was really focused on.
+
+18
+00:02:19,083 --> 00:02:26,319
+And so, you want license spectrum. As you know, Magma is very flexible on the spectrums. It includes... this includes all kinds of spectrum.
+
+19
+00:02:26,319 --> 00:02:29,411
+So, it's kind of... we had to do a cellular type solution.
+
+20
+00:02:29,411 --> 00:02:34,975
+Yeah. And then why go with Magma, rather than some more established, you know, commercial offering?
+
+21
+00:02:34,975 --> 00:02:44,950
+Right, yeah. So, we looked at that too. So, so it turns out, you know... very few of the problems with remote connectivity are actually like purely technical.
+
+22
+00:02:44,950 --> 00:02:48,940
+They tend to be the intersection of technology and economics, and this is one of them,
+
+23
+00:02:48,940 --> 00:03:03,644
+which is in order for this to be solvent, that is to actually, you know, be able to pay for itself, or to to be independently viable, you have to bring down the cost by about an order of magnitude.
+
+24
+00:03:03,644 --> 00:03:08,312
+And so, if you're buying this very expensive gear and running this very expensive gear, it was just too expensive.
+
+25
+00:03:08,312 --> 00:03:15,000
+Magma, on the other hand, has two benefits: it allows you to have lower CAPEX, right, you know, so you can do cheaper gear, you're not paying for the software,
+
+26
+00:03:15,000 --> 00:03:20,171
+but also, the actual management tends to be far simpler because it's cloud-managed.
+
+27
+00:03:20,171 --> 00:03:23,862
+So, you can actually build kind of more of an automated system. So, it just drives down the cost so much.
+
+28
+00:03:23,862 --> 00:03:30,712
+Yeah, that's great. So you really hit on some key points of Magma there, like it doesn't really care about what spectrum, but will certainly work on licensed spectrum,
+
+29
+00:03:30,712 --> 00:03:35,637
+easy to manage, and being open source on commodity hardware drives down all the costs.
+
+30
+00:03:35,637 --> 00:03:44,552
+So, that's great. Fantastic use case. People who want to know more about this should go and read up about MuralNet delivering their service from across the US in remote communities.
+
+31
+00:03:44,552 --> 00:03:46,916
+And, Martin, thanks very much for your time.
+
+32
+00:03:46,916 --> 00:03:49,680
+It's a real pleasure! Thank you!
+
