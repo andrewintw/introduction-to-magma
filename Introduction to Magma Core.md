@@ -55,7 +55,7 @@
 
 ### Cellular Architecture Overview
 
-![](01-Introduction to Cellular Networking/images/CellularNetwork.png)
+![](01-Introduction%20to%20Cellular%20Networking/images/CellularNetwork.png)
 
 (cellular network 的 High-level 架構圖)
 
