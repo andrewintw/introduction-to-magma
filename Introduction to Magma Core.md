@@ -217,3 +217,179 @@ NOTE:（不負責心得）我自己的感覺是，這種分離可能來自於電
 	* 沒有 buffers data
 
 剛剛說，cellular network 會盡可能地保持 UE session 來做到 Mobility。但長期處於 inactive 的 UE 遺失 session，當 UE 再次 active 時會建立新的 session 並分配新的 IP 地址。
+
+
+## 02-Magma Architecture Overview
+
+Magma的主要組成部分：
+
+* [ ] Access Gateway（AGW）：為 Mobile Core 實現了 user plane 和 mobility 的管理功能
+* [ ] Orchestrator（orc8r）：它為 Mobile Core 提供 control 和 configuration 的中控中心，並與許多其他 components 連接
+* [ ] Federation Gateway（FGW）：允許 Magma 擴展「現有移動網絡」
+* [ ] Network Management System（NMS）：它提供了一個 GUI，用於 provisioning 和操作基於 Magma 的網絡
+
+Magma 在幾個重要方面與 3GPP 的傳統實現方式不同，特別是在實現無線接入（radio access）技術**獨立性**的方式上。
+
+目標
+
+* [ ] 熟悉 Magma 的主要 building blocks
+* [ ] 了解 Magma 的關鍵設計原則
+* [ ] 討論 Magma 架構在提高 reliability、scale、operations 和 heterogeneity 方面的主要優勢
+
+
+
+### Architectural Principles
+
+Magma 從現代 cloud data center 的架構原則中借鏡，並將它們套用於 mobile core 的架構中。概括如下：
+
+* 控制平面（control plane）和數據平面（data plane）分離
+	* 控制平面元素的故障不應導致數據平面失敗
+* 將數據平面狀態推到邊緣（edge）
+	* 例如，每個 UE 的狀態不應出現在網路的核心中，而應僅存在於靠近邊緣的設備中（例如，在靠近 UE 的 AGW 中）
+	* [ ] 這使得系統更具可擴展性和容錯性
+* 中心化儲存 configuration state，在邊緣存儲 runtime state
+	* 這與軟體定義網絡 (SDN) 中採用的方法相同
+* Desired State Configuration（DSC）模式
+	* APIs 允許用戶配置他們的預期狀態，而控制平面負責確保實現該狀態
+* 將 core network 與 radio access network 的細節隔離開來
+	* 3GPP 針對不同世代的無線電在 mobile core 中做出了不同的設計選擇
+	* Magma 對所有無線電接入技術採用「"common（通用）" core design」，包括公民寬頻無線電服務 (CBRS) 和 WiFi 等非 3GPP 技術
+* 軟件控制的數據平面
+	* 可通過獨立於硬件的 interfaces 管理數據平面
+* 在各 components 之間使用標準的分散式技術進行通信
+	* 例如 Magma 的主要組件使用 gRPC 相互通信
+	* gRPC 是一種開源的 RPC 框架
+* 預計個別組件會失效
+	* 一個組件的故障會影響盡可能少的用戶（即 small fault domains）並且不會影響其他組件
+	* 「組件失效是正常的，並且必須在設計中處理」的假設是 cloud native applications 的典型思維，但在傳統電信網路的架構中並不常見
+
+NOTE:
+
+* 儘管 3GPP 具有控制和用戶平面分離 (CUPS) 的概念，但控制平面元素通常會持有一些用戶平面（數據平面）狀態
+* （Magma 所說的）控制平面和數據平面的適當分離，能使系統具有更好的 upgradability（可升級性）與更健壯的架構。
+
+
+### Magma Architecture Overview
+
+![](02-Introduction%20to%20Magma%20Architecture/images/Magma_High-Level_Architecture.png)
+
+(Magma High-Level 架構圖)
+
+* 「Orchestrator 是一種"雲服務"」，提供了一種簡單、一致且安全的方式來配置和監控無線網絡
+	* Orchestrator 可以託管在公共/私有雲上
+	* 透過 Orc8r 平台獲取的 metrics（權值？）允許您透過 Magma web UI 查看無線用戶的分析和流量
+	* Orchestrator 實現了中心化的 management plane，以及 Magma control plane 的各個方面
+* Access Gateway (AGW) 實現 Evolved Packet Core (EPC) 的 runtime 特性
+	* 內容就是 SGW、PGW 和 MME 等所做的事情
+		* NOTE: 記得上面說 "在邊緣存儲 runtime state" 和 "UE 的狀態推到邊緣 -- AWG" 嗎？
+	* 「Runtime」指的是那些由於 UE 開機、使用配額消耗或移動事件等事件而頻繁變化的功能 -- 不就是 4G 中提到的 MME、SGW 所做的事情？
+	* 一個 Orchestrator 通常管控多個 AGW，一個 AGW 通常支援多個基站
+* Federation Gateway (FGW)
+	* 視為連結現有 mobile core 的標準接口
+	* 透過 gRPC 與 Orchestrator 通訊
+	* 使得 Magma 系統能夠連接並擴展現有的 mobile core network
+		* 例如利用現有的用戶數據、計費系統和政策
+
+NOTE: 這張圖沒有顯示 Magma 的第四個組件 NMS（network management system）
+
+
+### Management, Control, and Data Planes
+
+3GPP 中規範了 Control Plane 和 User Plane 的概念。但在 Magma 的系統中使用不同的術語：management, control, 以及 data planes
+
+![](02-Introduction%20to%20Magma%20Architecture/images/Management__Control__and_Data_Planes.png)
+
+(Management, Control, and Data Planes 示意圖)
+
+* 在 Magma 的架構下，Data Planes ​分佈在一組 AGW（以及非必要的一個或多個 Federation Gateways）中
+	* 它涉及 data packets 的轉發和策略的執行
+	* 概念上接近 3GPP 所說的 User Plane -- 可以想成是用戶會產生的資料
+* control plane 在邏輯上是中心化的，它決定如何對 data plane 進行更新，以確保實際呈現 desired state
+	* 回想剛剛說的 -- "中心化儲存 configuration state"
+	* 回想剛剛說的 -- "DSC 模式下，允許用戶配置他們的預期狀態，而控制平面負責確保實現該狀態"
+* control plane 會從 data planes 收集資訊。例如，了解 UE 的新位置
+	* 這稱為 discovered state
+	* 當 discovered state 和 desired state 之間存在差異時，control plane 有責任決定如何解決該差異
+* management plane 為 configuration 和 querying 提供單一進入點（其實就是 APIs 啦）
+	* 當 configuration info 透過「northbound API」提供給 management plane 時，更新 desired state
+
+這樣的「desired state model」是 cloud native systems 中的常見模式
+
+* control plane 的主要工作是: 在面對 configuration changes、components failures 或其他事件（例如新 UE 的入網）時，不斷協調系統的 actual state 與 desired state
+
+這是架構上的邏輯視角，而非物理視角
+
+* 圖中的 control plane 在邏輯上是中心化的，但實務上可能在可用性、故障隔離和其他考量下，會以分層和分散式的方式部署
+	* control plane 的某些部分在 Orchestrator 中集中運行，而其他部分則分散到 AGW -- 記得之前說過 "一個 Orchestrator 通常管控多個 AGW" 嗎？
+	* 運行在 orc8r 中的控制平面部分稱為 central control plane
+	* 運行在 AGW 中的部分控制平面稱為 local control plane
+
+3GPP 的控制平面與 Magma 控制平面不同
+
+* 3GPP 控制平面可以理解為一種 signaling 功能，用來建立 User Plane channel
+* 3GPP 並沒有真正集中式的 state model，因此不會對應到上述的 desired state model
+
+不負責小感想
+
+3GPP 的思維起點並非架構導向的，比較像是流程導向，他像是在思考 -- 為了讓用戶上網（User Plane），我該進行那些控制行為（Control Plane）？而那些控制行為要傳送什麼 signaling？
+
+Magma 則是從 state model 的角度思考，我希望系統成為什麼樣子（desired state）？目前是什麼樣子（discovered state）？要怎麼實現它（Realized State）？然後依據 state 職責劃分出 Management, Control, 以及 Data Planes。
+
+
+### The Orchestrator (a.k.a orc8r)
+
+* 在剛剛描述的模型中，orc8r 實現了 management plane -- 透過 REST APIs 讓 Magma 能提供 configuration interface
+* orc8r 還實現了 Magma control plane 的中心化思維 -- 根據 configuration info 收集（discovered）各種（state），然後將指令 push 到 AGWs
+* orc8r 還整合了其他系統（一些開源套件），以提供在電信領域常見的 FCAPS（fault, configuration, accounting, performance, security | 故障、配置、記帳、性能、安全）管理功能
+
+![](02-Introduction%20to%20Magma%20Architecture/images/Orchestrator_and_its_main_interfaces.png)
+
+(Orchestrator 及其主要界面)
+
+* orc8r 以雲服務來實現
+	* 如上圖紫色框所示，服務可以有多個 instance
+	* 具備容錯性、Failover
+	* 並且可以通過額外的 instance 進行橫向擴展 -- 這些擴充的 instances 在邏輯上仍會有個中心化的 control plane 和 API 進入點
+* Orchestrator 可連接到其他服務（如右側所示）
+* 一個 Orchestrator 連接到多個 Magma Access Gateways
+* gRPC 用於將 status info 從 AGW 傳送到 orc8r，並將 configuration info 推送到 AGW
+
+Orchestrator 可以連接到傳統電信提供的 Operations Support 和 Billing Support (OSS/BSS)系統，也可以單獨運作一個小型的 OSS/BSS -- 小型的運營商可能會需要這樣的東西
+
+Orchestrator 實現前面提到的「desired state model」:
+
+* 用戶輸入 desired state（例如，某個 subscriber 應該可以存取具有特定流量的網路）
+* Orchestrator 通過將更新推送到適當的 gateways 來確保實現(realized) desired state
+* 有一個 loop，持續協調 realized state 與 desired state
+
+理解 Orchestrator 和 AGW 之間的分離，有助於區分 configuration state 和 runtime state
+
+* 記得前面說過: 中心化儲存 configuration state，在邊緣存儲 runtime state
+* configuration state 由運營商提供，例如，新增一組與新用戶相關的策略 -- orc8r 處理
+* runtime state 由真實運作的行為產生，例如 UE 上電，或從一個基站到另一個基站的移動性切換 -- AGW 處理（它在邊緣 -- 靠近用戶）
+
+
+### Access Gateway (AGW)
+
+* Access Gateway (AGW) 提供 EPC 的 runtime functionality
+	* 這些功能包括（4G 下的）
+		* User Plane functions: SGW、PGW
+		* Control Plane function: MME。
+* 一個 AWG 通常有幾個基站，每個 Orchestrator 有多個 AGW -- 可以根據需要添加額外的 AGW 擴展網絡
+
+![](02-Introduction%20to%20Magma%20Architecture/images/High_level_view_of_Access_Gateway.png)
+
+* AGW 向 Orchestrator 報告 runtime state
+* Orchestrator 將配置命令推送給 AGW，例如
+	* AGW 負責生成加密密鑰（runtime state），以便 UE 可以安全地與 mobile core 通訊
+	* Orchestrator 負責配置允許 UE 連接到網絡的策略（config state）
+
+
+===
+
+
+### Federation Gateway (FEG)
+
+### Network Management System (NMS)
+
+![](02-Introduction%20to%20Magma%20Architecture/images/Magma-arch@2x.png)
