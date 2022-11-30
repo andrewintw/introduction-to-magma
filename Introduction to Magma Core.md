@@ -384,12 +384,287 @@ Orchestrator 實現前面提到的「desired state model」:
 	* AGW 負責生成加密密鑰（runtime state），以便 UE 可以安全地與 mobile core 通訊
 	* Orchestrator 負責配置允許 UE 連接到網絡的策略（config state）
 
-
-===
-
-
 ### Federation Gateway (FEG)
+
+![](02-Introduction%20to%20Magma%20Architecture/images/Magma_High-Level_Architecture.png)
+
+* FEG 透過「標準 3GPP 介面」連接「現有 MNO components」
+* FEG 讓移動網絡運營商 (MNO, Mobile Network Operator) 的核心網絡能銜接 Magma 
+* 它充當 Magma AGW 和運營商網絡之間的 proxy
+* 這讓身份驗證、data plans、策略執行和計費等核心功能，能在現有 MNO 網絡和 Magma 網路之間保持統一
+
 
 ### Network Management System (NMS)
 
 ![](02-Introduction%20to%20Magma%20Architecture/images/Magma-arch@2x.png)
+
+* Magma NMS 是一個能夠進行 provisioning 和設定 Magma 網路 的 GUI (web)介面
+* 「It is implemented on top of the REST API exposed by the orchestrator」
+	* NMS 是一個 GUI，但真正操作的是 orchestrator 提通的 REST APIs
+* NMS GUI 夠建立和管理:
+	* Organizations
+	* Networks
+	* Access Gateways 和基站（eNodeNs, GNodeBs）
+	* Subscribers
+	* Policies and APNs (Access Point Names)
+
+* NMS 是 Magma 系統的 optional component，因為可以從其他系統（例如運營商現有的 NMS）直接與 Magma 的 RESTful API 通訊
+* NMS 還提供 dashboards 來監控 infrastructure 和系統的健康狀態
+
+
+## 03-The Orchestrator
+
+* Orchestrator 是 configuration input 和 monitoring Magma 部署狀態的中心點
+* 傳統的 3GPP 部署需要管理各個網路元件，而 Orchestrator 提供了 network-wide 的 config 能力和 status 視角
+
+目標
+
+* [ ] 了解 Orchestrator component 的主要功能
+* [ ] 了解 Orchestrator 如何與 Magma 的其餘部分通訊
+* [ ] 了解 Orchestrator 如何與各種外部 component 溝通，以支持 logging 和 metrics gathering 等功能（稱為 FCAPS 的功能——故障、配置、記帳、效能、安全性）
+
+
+### Orchestrator Overview
+
+Orchestrator 及其主要介面
+
+![](03-The%20Orchestrator/images/Orchestrator_and_its_main_interfaces.png)
+
+* Orc8r 整合了一系列開源套件的功能，如 ElasticSearch Kibana、Fluentd 等
+* Orc8r 使用 gRPC 與 AGW 和 FEG 通訊
+* 它 "exposes" 了一個用於管理和配置的「northbound REST API」
+* Orc8r 是個在公有或私有雲上實現的 cloud service
+* Orc8r 透過 gRPC 與 AGW "雙向" 通訊
+	* Orchestrator 將 configuration info 發送到 gateways，然後 gateways 回報 status, metrics, events...等等
+	* 上面說的 “gateways” 可以是多個 AGW 或 通常只有一兩個的 FEG
+
+
+### Orchestrator Functions
+
+Orchestrator 支援的功能：
+
+* Network entity configuration (networks, access gateways, federation gateways, subscribers, policies, etc.)
+* Metrics querying（透過整合到 Orc8r 的 Prometheus 和 Grafana 套件功能）
+* Event and log 聚合（透過整合到 Orc8r 的 Fluentd 和 Elasticsearch Kibana 套件功能）
+* Device state reporting（metrics 和 status）
+
+
+所有的功能都是中心化的
+
+* 無論部署了多少 radio access points（eNodeBs）和 Access Gateways (AGWs)，都可以透過 Orchestrator 提供的　API 完成配置和監控
+* 相較於多數 3GPP 的實作方式，必須對每個 component 進行配置，而 Magma 將此類配置全集中在 Orchestrator
+	* 無論是增加新的 AGW 還是新的用戶，都可以透過一個 API 完成
+	* Orchestrator 將設備的管理抽象化
+
+所有 Orchestrator 功能都透過訪問 REST API 實現
+
+* 管理者可以使用 NMS 訪問（因為 NMS 使用 Orchestrator 開放的 APIs）
+* 也可以讓營運商現有的 dashboards 或系統整合近來
+
+
+### FCAPS (Fault, Configuration, Accounting, Performance, Security)
+
+* FCAPS 是電信行業的術語，用來泛指與「管理網路」相關的事情
+* 重要的是 -- 發生異常時診斷問題；即將出現效能影響時發出警報
+
+
+### Orchestrator Architecture
+
+* Orchestrator 具備 modular and extensible
+* modularity 允許運營商僅部署所需的服務
+	* 例如，可以安裝內含或不含 metrics module 的 Orchestrator
+	* metrics, alerts, logging 等功能，都是由透過整合開源套件到 orchestrator 提供的
+
+在設計上，Core Orchestrator 的原則是與特定技術的細節無關，所以核心的服務都是 "domain-agnostic" 的 -- 這裡指的應該就是 FCAPS 那些事情。但透過 "modularity" 模塊化的特性，系統仍可以為核心提供 "domain-specific" 的支援 -- 例如對 LTE 的支援。
+
+* Orchestrator 的模塊化架構是使用 service mesh (服務網格) 方法實現的
+	* 每個 module 都被實現為一個 microservice (微服務)，可以獨立於其他 module 進行橫向擴展
+
+
+### Configuration Example
+
+![](03-The%20Orchestrator/images/Example_of_configuration_of_new_AGW_by_the_Orchestrator.png)
+
+假設運營商想要新增一台支援 LTE 功能的 AGW:
+
+* 透過呼叫 Orchestrator 的 REST API 啟動 -- 該 API 呼叫可由 NMS 或另一個系統產生
+* 因為這請求是專屬於 LTE 的特定功能，因此 API 請求將被導到 LTE 模組處理
+* 更新 "desired state" 以反映「有一台新 AGW 要註冊」的事實，並生成並傳遞一組 configuration info 並給 AGW 以實現 state
+
+
+### State Checkpointing
+
+* Orchestrator 接收 configuration inputs，並且扮演 desired state 的 repository。
+* Orchestrator 還得接收並儲存旗下的 AGWs 回傳的 "runtime state" -- ex: active UEs 當前的狀態
+* orchestrator 中的 “state service” 維護這些資訊，以便 orchestrator 的其他元件可以利用 checkpointed state 執行各種任務
+	* 例如: 根據 UE 的當前位置將 message forward 到適當的 AGW
+
+由於 state 都保存在中心化的 repository，Orchestrator 得以支援以下功能：
+
+* 源自 federated network 的請求可以根據 UE 位置正確 forward 到適當的 AGW
+* 如果 UE 從一個 AGW 移動到另一個 AGW，其相關狀態可以轉移到新的 AGW 以支持 mobility (移動性)
+* 可以利用這個 checkpointed state 來提高 AGW 的可用性 (availability)
+
+
+### Metrics and Monitoring
+
+* Metrics 由 gateway components 生成，並回報給 Orchestrator 進行存儲和分析
+* Magma 整合 Prometheus -- 將 Metrics 存儲在 time-series database
+* Magma 還整合了 Grafana -- 將 Prometheus 收集到的資料進行可視化和分析
+
+![](https://ralph.blog.imixs.com/wp-content/uploads/2019/01/imixs-cloud-grafana-768x449.png)
+
+
+```
+$ docker ps --format '{{.Names}}'
+nms-magmalte-1
+orc8r-nginx-1
+orc8r-controller-1
+orc8r-postgres_test-1
+orc8r-alertmanager-1
+orc8r-prometheus-1
+orc8r-prometheus-configurer-1
+orc8r-prometheus-cache-1
+orc8r-maria-1
+orc8r-user-grafana-1
+orc8r-postgres-1
+elasticsearch
+orc8r-alertmanager-configurer-1
+```
+
+
+### Events and Logging
+
+Orchestrator 可追蹤事件:
+
+* Subscriber session 追蹤
+* Subscriber 資料使用和 bearer creation
+* Gateway 連接狀態
+* eNodeB 狀態追踪
+* New gateway configurations pushed
+
+Orchestrator 使用 Fluentd 來存儲事件追踪的資料（就是指 log 吧）。Elasticsearch Kibana 則用於支援資料查詢
+
+
+### Security
+
+* Orchestrator 使用 TLS（Transport Layer Security）來保護通訊
+* 多數情況下，連線都是相互驗證的，即 client 和 server 都使用 certificates 向另一方驗證自己的身份
+
+例外情況:
+
+* 一旦通過身份驗證，client certificate 將轉換為一組 "trusted metadata"
+* 從此，各個服務可以通過查詢此 metadata 來做出有關 access 的決策 -- 在 Orchestrator 中由 accessd 服務處理
+
+對於 "northbound API"，請求必須包含已 provisioned 的 client certificate -- 可用　Orchestrator CLI 產生此證書
+
+
+## 04-The Access Gateway
+
+* Access Gateway (AGW) 也是模組化設計的
+
+目標
+
+* [ ] 了解 Access Gateway component 的主要功能。
+* [ ] 了解 AGW 如何與 Magma 的其餘部分通訊
+* [ ] 了解 AGW 與傳統 3GPP mobile core 在實作上的差異
+
+
+### AGW Architecture
+
+![](04-The%20Access%20Gateway/images/Major_Functional_Blocks_of_the_Access_Gateway.png)
+
+(AGW 的主要 Functional Blocks)
+
+* 模組化設計允許將 "radio-technology-specific" 的細節限制在幾個特定模組中
+* 透過維護 "small fault domains" 來提高 availability 和 upgradeability 的目標
+* 每個模組都可以獨立升級和重啟
+
+如前所述，每個 AGW 都連到一個 Orchestrator。Orc8r 實踐了 centralized control plane
+
+* AGW 包含與 UEs 相關聯的所有 runtime state
+* 多個 eNodeB 可能連接到單個 AGW
+	* 5G 情況下是 gNodeB 
+* AGW 可以支援多種無線技術，包括 5G/4G/LTE，以及 WiFi 和 CBRS（公民寬帶無線電服務）
+
+
+* Orchestrator 和 AGW 之間的通訊使用 gRPC
+* AGW 內部的模組間通信也使用 gRPC
+* eNodeB（或其他基站類型）的介面是由 3GPP 規範的
+
+
+* AGW 中的所有 "stateful services" 將其記憶體中的狀態寫入 Redis 的 key value 存儲
+* 在啟動時，服務從狀態存儲中讀取它們的 runtime state，並使用 GRPC 介面將必要影響傳遞到其他服務
+
+
+### Device Management
+
+設備管理需要兩個主要元件：
+
+* AGW 本身的管理
+* 管理 RAN 設備，例如 eNodeBs
+
+AGW 的管理獨立於無線電技術並且需要：
+
+* 確保 AGW 的所有元件服務都正常啟用且健康
+* 收集並向 Orchestrator 報告其他服務的 metrics
+* 與 Orchestrator 通信以 bootstrap AGWs
+
+
+* 設備管理中有一個 technology-specific 的模塊，它知道如何與特定類型的 RAN 設備（例如 4G/LTE 中的 eNodeB）進行通信
+* 可以根據需求增加模組，以支援各種無線電接入技術，無需更改 AGW 系統的其餘部分
+
+這突出了 Magma 設計與傳統 3GPP 實施之間的兩個主要區別：
+
+* 可以從一個介面（Orchestrator）集中管理一組 eNodeBs（或其他基站）
+* implementation 獨立於無線電接入技術（4G/LTE/5G/WiFi）。只有 AGW 中的特定模塊了解無線電技術，並知道如何使用適當的通訊協定與基站進行通訊
+
+
+### Access Control and Management
+
+* AGW 的訪問控制元件會在 UE active 時執行身份驗證
+* 並建立從 UE 到 mobile core 的 data plane 元件（4G/LTE 中的 SGW 和 PGW）的 secure data path
+* 必須訪問 subscriber database 才能執行像是驗證用戶是否有權訪問網路、獲取用於驗證的 key
+
+
+### Subscriber Management
+
+* 用戶管理功能有效地提供了用戶資訊的 local store
+* 相當於 3GPP 標準中的 Home Subscriber Service (HSS)
+* 如果 Magma 與現有的 MNO network 連接，則無需使用 local subscriber management
+* 當 AGW 在沒有聯合(MNO)的情況下運行時，subscriber management 存儲由 Orchestrator 提供的 subscriber profiles
+
+
+###　Session and Policy Management
+
+* 當 UE "attaches" 到 mobile core 時，需要建立一組 session policies
+	* 例如，用戶可能有權獲得特定的 data rate 或 QoS
+* 為實踐這些策略，Orchestrator 將 policy rules 提供給 AGW 中的 policy database
+* 為了執行策略，session management 元件向 data plane 提供資訊，以便 QoS、速限等設定可以適當地套用到 data plane 中並執行
+
+
+### Data Plane (Packet Processing Pipeline)
+
+* Magma 的 data plane 是使用可程式化的 forwarding model 實現的 -- based on "Open vSwitch (OVS)"
+* 可以在 data traffic 通過 AWG 時對其執行一系列策略 -- "programmable"
+* OVS 根據 session 和 policy management 元件提供的 forwarding rules 強制執行
+* packet processing pipeline 甚至可以使用深度封包檢測 (DPI, deep packet inspection) 在各個協議層 (L2-L7) 執行規則
+
+
+### Telemetry and Logging
+
+AGW 可以收集事件並將其傳遞給 Orchestrator 以進行後續分析，包括：
+
+* 與 access gateway 功能相關的事件（例如服務重啟）
+* 與 subscriber sessions 相關的事件（例如 session 開始/結束）
+* 與 MME 功能相關的事件（例如 subscriber attach/detach）
+
+還有一種追踪功能，用於捕獲無線接入點和 AGW 之間流動的 control packets，以進行故障排除
+
+該服務透過 Orchestrator 的 API 呼叫啟用，然後 Orchestrator 將請求傳給 AGW 中的 tracing module -- 中心化控制
+
+
+### Optional Services
+
+包括使用 ping 監控連接到 Magma 服務的 CPE（客戶端設備）設備的活躍度，並將此報告回給 Orchestrator
+
