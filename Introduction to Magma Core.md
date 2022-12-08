@@ -709,7 +709,7 @@ FEG 和 AGW 之間:
 ### High Availability
 
 * 通常在 active/standby 配置中會有一對 FEG 以提供 high availability (可用性)
-* 每個網關向 Orchestrator 報告其 health status
+* 每個 gateway 向 Orchestrator 報告其 health status
 * Health 由 real-time system 和 service metrics 組成
 	* 例如: 服務可用性、請求失敗百分比和 CPU 利用率
 * Orchestrator 維護所有 Federation Gateway 健康狀況，負責設置哪個 Gateway 處於 active 狀態，並將流量 routing 到該 Gateway
@@ -841,70 +841,70 @@ top-level dashboard 提供 summary info：
 * eNodeBs 的數量，以及當前傳輸的狀態
 * Network-wide event table
 
+
 ### Equipment Dashboard
 
-設備儀表板涵蓋了 Magma 部署的基礎設施組件，即接入網關和 eNodeB。對於 AGW 和 eNodeB，儀表板顯示狀態（例如健康狀況）並提供配置和升級相關設備的選項。
+* Equipment Dashboard 涵蓋了 Magma 部署的 infrastructure 元件，即　Access Gateways 和 eNodeBs
+* 對於 AGWs 和 eNodeBs，儀表板顯示狀態（例如健康狀況）並提供配置和升級設備的選項
 
 
 ### Equipment Dashboard: The Gateway Page
 
-具體來說，網關頁面允許操作員查看：
+具體來說，Gateway page 允許查看：
 
-* “簽入事件”作為每個網關的健康和連接性的可見指示。
-* 網關特定的 KPI，包括對特定目的地的 ping 的最大、最小和平均延遲以及健康網關的百分比。
-* 每個網關的詳細信息，例如名稱、硬件 ID 等。
-* 連接到每個網關的 eNodeB 的數量。
-* 連接到特定網關的訂閱者列表。
-* 網關記錄的事件的可搜索表和事件頻率的圖形表示。
-* 可搜索的日誌消息表和日誌消息頻率的圖形表示。
-* 警報表。
+* “Checkin events” 顯示每個 gateway 的 health 和 connectivity (連接性)
+* Gateway 特定的 KPI -- 包括對特定 destination 的 ping 的 Max, Min, Average latency 以及健康狀態百分比。
+* 每個 gateway 的詳細信息，例如名稱、hardware ID
+* 連接到每個 gateway 的 eNodeBs 數量
+* 連接到特定 gateway 的 subscribers 列表
+* 可搜尋的事件記錄表和事件發生頻率的圖表
+* 可搜尋的 log messages 列表和 log 發生頻率的圖表
+* alerts 列表
 
-下圖顯示了事件頁面上設備儀表板的示例：
+下圖顯示了 Events page 上 Equipment Dashboard 的範例：
 
 ![](06-The%20Network%20Management%20System/images/gateway_detail2.png)
 
-網關頁面還允許操作員配置 AGW、添加或刪除 AGW 以及升級其軟件。
+gateway page 還允許配置、新增、刪除 AGW 以及升級軟體。
 
 ### Equipment Dashboard: eNodeB Page
 
-eNodeB 頁面允許操作員查看：
+eNodeB page 允許查看：
 
-* 通過一組 eNodeB 的流量的總吞吐量。
-* eNodeB 的摘要健康狀況。
-* 每個 eNodeB 的詳細信息，例如其名稱、硬件 ID、硬件配置等。
+* 通過 eNodeB traffic 的 throughput
+* eNodeB 的健康狀況摘要
+* 每個 eNodeB 的詳細信息，例如其名稱、hardware ID、hardware configuration
 
-還可以添加、編輯和刪除 eNodeB。
+還可以新增、編輯和刪除 eNodeBs
 
 
 ### Network Dashboard
 
-在移動核心的上下文中，“網絡”可以定義為 RAN 和 EPC 資源的集合，用於向一組用戶提供網絡服務。
-因此，網絡具有一組屬性，例如名稱、MCC/MNC 元組（移動國家代碼/移動網絡代碼）和一組相關資源，
-例如 RAN 中分配的帶寬和無線電信道。這些對於所使用的特定無線電接入技術來說是非常特定的。
-網絡儀表板允許操作員查看一組已配置的網絡並添加新網絡或編輯現有網絡的屬性。
+* 在 mobile core 的 context 中，“network” 可以定義為 RAN 和 EPC 資源的集合，用於向一組用戶提供網絡服務。
+* Network Dashboard 允許查看一組已配置的網路，也可增加或編輯網路屬性
 
 
 ### Subscriber Dashboard
 
-訂閱者儀表板提供所有訂閱者的可搜索列表、每個訂閱者的一些高級詳細信息以及深入了解單個訂閱者的能力。都支持訂閱者的增刪改查。概覽頁面（取自Magma 文檔）如下所示：
+Subscriber（租用戶）儀表板提供可搜尋的用戶列表：
 
 ![](06-The%20Network%20Management%20System/images/subscriber_overview1.png)
 
-當操作員深入了解單個訂戶時，他們會看到該訂戶狀態的概覽。這包括訂閱者最近的數據使用情況，如下所示（從Magma 文檔中檢索）：
+當管理深入查看單一用戶時，他們會看到該用戶的總覽。包括最近的數據使用情況，如下所示：
 
 ![](06-The%20Network%20Management%20System/images/stacked_barchart.png)
 
-儀表板還允許操作員查詢與訂閱者相關的事件，例如會話何時開始和終止。
+儀表板還允許查詢與用戶相關的事件，例如 sessions 何時開始和終止。
 
-訂閱者儀表板還可用於創建、編輯和刪除訂閱者記錄，以及每個訂閱者的所有相關參數。這些包括：
+Subscriber Dashboard 還可用於新增、編輯和刪除用戶記錄，以及每個用戶的所有相關參數。包括：
 
-* 訂戶名稱
-* IMSI（訂閱者的唯一標識符）
-* 訂閱者的密鑰（Auth Key）
-* 訂戶的數據計劃
-* 訂閱者的 APN（接入點名稱 - 訂閱者連接的數據網絡）。
+* Subscriber Name
+* IMSI（用戶的唯一識別碼）
+* 用戶的密鑰（Auth Key）
+* 用戶的 data plan（有點像是網路方案吧）
+* 用戶的 APN（Access Point Name - subscriber 連接的 data network）
 
-如前所述，在聯合環境中，用戶信息來自運營商現有的移動網絡，NMS 僅允許查看而不是創建或編輯該信息。
+如前所述，在聯合(federated)環境中，用戶資訊來自運營商現有的移動網絡，NMS 僅允許查看，無法建立或編輯該信息。
 
 
 ### Traffic Dashboard
@@ -918,38 +918,39 @@ eNodeB 頁面允許操作員查看：
 
 ### Metrics
 
-正如第 3 章所討論的，Magma 被廣泛使用，因此幾乎可以從系統的每個部分收集指標。Magma 網關和 Orchestrator 生成指標以提供對網關、基站、用戶、可靠性、吞吐量等的可見性。這些指標定期推送到 Prometheus 提供的時間序列數據庫中。指標可以通過多種方式查詢和展示，網管為此提供了儀表板。
+* Magma 廣泛使用 Metrics，因此幾乎可以從系統的每個地方收集 Metrics
+* Magma gateway 和 Orchestrator 生成 metrics 以提供對 gateways、基站、用戶、可靠性、吞吐量等資料視覺化
+* 這些 metrics 會定期推送到 Prometheus 資料庫中
+* metrics 可以以多種方式查詢和展示
 
-用於探索和查看指標的儀表板由 Grafana 提供，Grafana 是一個功能齊全的分析平台，允許用戶創建自定義儀表板。Magma 帶有一些內置儀表板，如下圖所示，它顯示了 eNodeB 狀態、連接的用戶以及 AGW 的附加指標。
-
+用於瀏覽和檢視 metrics 的儀表板由 Grafana 提供，Grafana 是一個功能齊全的分析平台，允許建立自定義儀表板。Magma 帶有一些內建儀表板，如下圖所示，它顯示了 eNodeB 狀態、連接的用戶以及 AGW 的 metrics。
 
 ![](https://github.com/andrewintw/introduction-to-magma/raw/main/06-The%20Network%20Management%20System/images/grafana_variables.png)
-
-Magma 支持的全套指標將隨著時間的推移而增加；當前集記錄在此處。有關 Grafana 的完整文檔以及如何自定義它，請參閱Grafana 文檔。
 
 
 ### Alerts
 
-警報為操作員提供了一種方法，可以通知操作員網絡中需要注意的情況，例如性能問題故障。Magma 提供一組內置警報、一種自定義警報的方法以及將警報定向到其他系統（例如 Slack）的工具，以便可以傳遞適當的通知並採取措施解決問題。NMS 支持這些操作。
+* Magma 提供一組內建 alerts、一種自定義 alerts 的方法，以及將 alerts direct 到其他系統（例如 Slack）的工具
 
-預定義的警報包括：
+Predefined 的 alerts 包括：
 
-* 網關上的高 CPU 使用率
-* UE 的不成功連接嘗試
+* gateway 發生高 CPU 使用率
+* UE 不成功連線的嘗試
 * 授權或認證失敗
-* 引導網關時的異常
-* 服務重新啟動。
+* gateway 啟動時的異常
+* 服務重新啟動
 
-可以使用上面討論的指標配置自定義警報，並將它們與某些觸發器進行比較，例如可用內存低於閾值、磁盤利用率高於閾值等。
+可以使用上面討論的 metrics 配置自定義 alerts，並將它們與某些 triggers 進行比較
+
+* 例如可用記憶體低於閾值
+* 硬碟使用率高於閾值
 
 
 ### Call Tracing
 
-調用跟踪是 Magma 提供的一種重要的故障排除工具，可以從 NMS 或 Orchestrator API 啟動。調用跟踪在 AGW 的特定接口上啟動數據包捕獲；然後可以使用 Wireshark 等工具下載和分析捕獲的數據包。通過檢查捕獲的消息交換，可以診斷一系列可能影響連接和使用網絡的訂戶的問題。下圖（取自 Magma 文檔）顯示了 Wireshark 中顯示的跟踪示例。
+* "Call tracing" 是 Magma 提供的一種重要的故障排除工具，可以從 NMS 或 Orchestrator API 啟動
+* Call tracing 在 AGW 的特定介面上啟動 packet capture；然後可以使用 Wireshark 等工具下載和分析捕獲的封包
 
 ![](06-The%20Network%20Management%20System/images/example_of_a_trace_displayed_in_Wireshark.png)
-
-Wireshark 中顯示的跟踪示例
-
 
 ~ END ~
