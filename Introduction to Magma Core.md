@@ -635,7 +635,7 @@ AGW 的管理獨立於無線電技術並且需要：
 * 當 AGW 在沒有聯合(MNO)的情況下運行時，subscriber management 存儲由 Orchestrator 提供的 subscriber profiles
 
 
-###　Session and Policy Management
+### Session and Policy Management
 
 * 當 UE "attaches" 到 mobile core 時，需要建立一組 session policies
 	* 例如，用戶可能有權獲得特定的 data rate 或 QoS
@@ -668,3 +668,280 @@ AGW 可以收集事件並將其傳遞給 Orchestrator 以進行後續分析，�
 
 包括使用 ping 監控連接到 Magma 服務的 CPE（客戶端設備）設備的活躍度，並將此報告回給 Orchestrator
 
+
+## 05-The Federation Gateway
+
+* FEG 是 Magma 與 “標準” 3GPP 世界之間的介面
+
+目標
+
+* [ ] 了解 FEG component 的主要功能
+* [ ] 了解 FEG 如何與 Magma 的其餘部分互動
+* [ ] 了解 federation 的 use cases
+
+FEG 滿足了擴展現有 MNO 網路（例如，增加覆蓋範圍或到達偏遠地區）的目標，同時保持用戶、政策和計費資料的一致性
+
+
+### Federation Gateway Overview
+
+![](05-The%20Federation%20Gateway/images/Magma_High-Level_Architecture.png)
+
+* 簡單地說，FEG 是個 proxy：一邊是使用 3GPP 協議（SGs, S6a, 等等），另一邊使用 gRPC。
+
+FEG 和 AGW 之間:
+
+* 兩者都在 Orchestrator 的控制下運行
+* FEG 處理與運營商核心的 control plane -- FEG 不承載 User Plane traffic
+* AGW 處理與 RAN 的 control plane
+* 通常架構中最多有兩個 FEG（for availability）就足以滿足 control plane 的流量負載需求
+* 相比之下，需要數十個或更多 AGW 才能支持大規模網絡
+
+
+### Communication among AGWs and FEGs
+
+* 請注意，Orchestrator 和 FEG 之間以及 Orchestrator 和 AGW 之間存在 gRPC 通訊路線，但 AGW 和 FEG 之間沒有直接連接
+	* 因為通常有多個 AGW 和 FEG
+	* 而 Orchestrator 得維護必要的 global mapping state，以確定哪個 AGW 或 FEG 應該是通訊目標
+* 這也最大限度地減少了進入運營商核心網絡的連接點數量 -- 只有 FEG 需要與 federated mobile core 直接連接
+* 每當需要從 AGW 向 FEG 發送訊息，或從 AGW 向 FEG 發送時，訊息都會發送到 Orchestrator 中的中繼服務
+
+
+### High Availability
+
+* 通常在 active/standby 配置中會有一對 FEG 以提供 high availability (可用性)
+* 每個網關向 Orchestrator 報告其 health status
+* Health 由 real-time system 和 service metrics 組成
+	* 例如: 服務可用性、請求失敗百分比和 CPU 利用率
+* Orchestrator 維護所有 Federation Gateway 健康狀況，負責設置哪個 Gateway 處於 active 狀態，並將流量 routing 到該 Gateway
+* FEG 不存儲持久狀態，standby gateway 可以在故障轉移期間快速提升為 active 狀態
+
+
+### Federation Gateway Main Functions
+
+FEG 支持 Magma 與 federated network 中的通訊，包含:
+
+* 使用 S6a interface 的 Home Subscriber Server (HSS)
+* 使用 Gx interface 的 Policy & Charging Rules Function (PCRF)
+* 使用 Gy interface 的 Online Charging System (OCS)
+* 使用 SGs interface 的 Mobile Switching Center/Visitor Location Register (MSC/VLR)
+
+以下部分將更詳細地探討其中的每一個
+
+這些 components 中的每一個，都有一個標準的 3GPP protocol 用於該 component 和 FEG 之間的通訊
+
+![](https://i0.wp.com/yatebts.com/wp-content/uploads/2018/11/LTE_classic_architecture.png)
+
+NOTE: 這個章節要講的是 FEG，要使用 FEG 表示要連接現有的 mobile network 服務，所以下面的 HSS, PCRF..等等都位於 FEG 後面的 Operator Core
+
+### Home Subscriber Server (HSS)
+
+* Home Subscriber Server 保存有關用戶的資訊，MME 會存取它以對 UE 進行身份驗證和授權
+* MME 和 HSS 之間的標準 3GPP 介面是 S6a
+* 當 UE 嘗試在 Magma 網路中與 AGW 關聯時（ex: 想透過它入網），AGW 的 MME 組件將需要向 federated network 中的 HSS 發出請求
+	* 這些請求以 gRPC 發送到 Orchestrator，然後中繼到 FEG
+	* FEG 形成必要的 S6a protocol messages 來查詢 HSS
+	* response 由 FEG 接收，然後再以 gRPC 回給到 Orchestrator，再中繼回 AGW
+
+雖然看起來很繞，但它確保：
+
+* federated network 的精確細節與 AGW 和 Orchestrator 隔離 -- 只有 FEG 需要詳細了解 federated network 中需實現的 3GPP protocols 和 procedures
+* 使用更多 AGW 或更多 FEG 擴展系統，並不會給 AGW 和 FEG 帶來額外負擔
+
+
+### Policy & Charging Rules Function (PCRF)
+
+* 在 "federated" 部署的情況下，PCRF 可以由 federated network 提供
+* 在這種情況下，FEG 透過 3GPP 定義的 Gx 介面，對 PCRF 提供標準介面
+
+與上一節一樣，FEG 需透過 Orchestrator 中繼與 AGW 通訊
+
+
+### Online Charging System (OCS)
+
+* Online Charging System 是 3GPP 架構的一個元件
+* 它追踪用戶的使用情況以進行計費
+* 它是 “在線” 的，因為它可以 real time 查詢
+	* 用戶是否仍有足夠的信用來繼續發送數據。
+* 透過 3GPP 定義的 Gy 介面
+* 一樣需透過 Orchestrator 中繼與 AGW 通訊
+
+
+### Mobile Switching Center/Visitor Location Register (MSC/VLR)
+
+* Visitor Location Register 類似於 HSS，但它儲存漫游到網路的 subscribers info
+* VLR 中存了用戶在 home network 中檢索到的訊息
+* FEG 充當 Magma 和 VLR 之間的 proxy
+
+
+## 06-The Network Management System
+
+* 幾乎 Magma 中的每個功能都是透過 Orchestrator 的 REST API 存取的
+* NMS 提供了一個位於該 API 之上的 GUI -- 管理者可以與 Magma 互動，無需開發自己的系統來使用 API
+
+目標
+
+* [ ] 了解 NMS 的主要功能。
+* [ ] 了解 NMS 如何與 Magma 的其餘部分互動
+
+NMS 提供了一個基本的 OSS/BSS 來操作 Magma 網絡。它支援電信術語說的 FCAPS（故障、配置、計費、性能、安全）
+
+
+### Rationale for the Network Management System
+
+NOTE: Orchestrator 可以單獨運作一個小型的 Operations Support 和 Billing Support (OSS/BSS)
+
+對於已建立的行動網絡運營商，他們可能需要連到 Magma 的自帶的 OSS/BSS，這可以透過以下組合來實現：
+
+* 使用 Federation Gateway 將現有網絡與 Magma 聯合(Federating)；和
+* 使用 Orchestrator 公開的 REST API 將 OSS/BSS 與 Magma 整合
+
+NMS 提供了一個架構在 Orchestrator REST API 之上的 GUI
+
+
+### Network Management System Overview
+
+Magma NMS 提供了一個 GUI，它能夠管理：
+
+* Organizations
+* Networks
+* Gateways 和 eNodeBs
+* Subscribers
+* Policies
+* APNs（Access Point Names）
+
+其他特性:
+
+* 提供所有 AGWs 及其 top-level status 的 dashboard
+* KPIs（關鍵績效指標）和特定 AGW 的狀態
+* 所有用戶及其 top-level status 的 dashboard
+* 單個用戶的 KPIs 和服務狀態
+* dashboard 上顯示的升級/修復的警報
+* 故障修復程序，包括遠程重啟 gateways 的能力
+* 遠程觸發 gateways 進行軟體升級的能力
+* A way to configure and download call traces
+
+
+### Federated Operations
+
+* 當 Magma 網絡與現有 mobile network 聯合 (federated) 時，在 federated network 中的配置在 NMS 中是可見的。
+	* ex: 可以在現有網路中創建用　subscriber profile，然後在 Magma NMS 中查看
+
+### Dashboards Overview
+
+NMS 的主畫面如下
+
+![](06-The%20Network%20Management%20System/images/Main_Screen_of_NMS.png)
+
+top-level dashboard 提供 summary info：
+
+* alerts 和 events 發生的時間和頻率
+* 顯示 “Critical”、“Major”、“Minor” 和 “Misc” alerts
+* 所有 gateways 和 eNodeBs 的 KPI 指標
+* “健康” 和 “不健康” gateways 的數量
+* eNodeBs 的數量，以及當前傳輸的狀態
+* Network-wide event table
+
+### Equipment Dashboard
+
+設備儀表板涵蓋了 Magma 部署的基礎設施組件，即接入網關和 eNodeB。對於 AGW 和 eNodeB，儀表板顯示狀態（例如健康狀況）並提供配置和升級相關設備的選項。
+
+
+### Equipment Dashboard: The Gateway Page
+
+具體來說，網關頁面允許操作員查看：
+
+“簽入事件”作為每個網關的健康和連接性的可見指示。
+網關特定的 KPI，包括對特定目的地的 ping 的最大、最小和平均延遲以及健康網關的百分比。
+每個網關的詳細信息，例如名稱、硬件 ID 等。
+連接到每個網關的 eNodeB 的數量。
+連接到特定網關的訂閱者列表。
+網關記錄的事件的可搜索表和事件頻率的圖形表示。
+可搜索的日誌消息表和日誌消息頻率的圖形表示。
+警報表。
+下圖（取自Magma 文檔）顯示了事件頁面上設備儀表板的示例：
+
+![](06-The%20Network%20Management%20System/images/gateway_detail2.png)
+
+網關頁面還允許操作員配置 AGW、添加或刪除 AGW 以及升級其軟件。
+
+
+### Equipment Dashboard: eNodeB Page
+
+eNodeB 頁面允許操作員查看：
+
+通過一組 eNodeB 的流量的總吞吐量。
+eNodeB 的摘要健康狀況。
+每個 eNodeB 的詳細信息，例如其名稱、硬件 ID、硬件配置等。
+還可以添加、編輯和刪除 eNodeB。
+
+
+### Network Dashboard
+
+在移動核心的上下文中，“網絡”可以定義為 RAN 和 EPC 資源的集合，用於向一組用戶提供網絡服務。因此，網絡具有一組屬性，例如名稱、MCC/MNC 元組（移動國家代碼/移動網絡代碼）和一組相關資源，例如 RAN 中分配的帶寬和無線電信道。這些對於所使用的特定無線電接入技術來說是非常特定的。網絡儀表板允許操作員查看一組已配置的網絡並添加新網絡或編輯現有網絡的屬性。
+
+
+### Subscriber Dashboard
+
+訂閱者儀表板提供所有訂閱者的可搜索列表、每個訂閱者的一些高級詳細信息以及深入了解單個訂閱者的能力。都支持訂閱者的增刪改查。概覽頁面（取自Magma 文檔）如下所示：
+
+![](06-The%20Network%20Management%20System/images/subscriber_overview1.png)
+
+當操作員深入了解單個訂戶時，他們會看到該訂戶狀態的概覽。這包括訂閱者最近的數據使用情況，如下所示（從Magma 文檔中檢索）：
+
+![](06-The%20Network%20Management%20System/images/stacked_barchart.png)
+
+儀表板還允許操作員查詢與訂閱者相關的事件，例如會話何時開始和終止。
+
+訂閱者儀表板還可用於創建、編輯和刪除訂閱者記錄，以及每個訂閱者的所有相關參數。這些包括：
+
+訂戶名稱
+IMSI（訂閱者的唯一標識符）
+訂閱者的密鑰（Auth Key）
+訂戶的數據計劃
+訂閱者的 APN（接入點名稱 - 訂閱者連接的數據網絡）。
+如前所述，在聯合環境中，用戶信息來自運營商現有的移動網絡，NMS 僅允許查看而不是創建或編輯該信息。
+
+
+### Traffic Dashboard
+
+“交通”這個名字起初可能有點令人困惑；它可能更準確地稱為“政策儀表板”。此儀表板顯示用於控制流量的策略（例如通過速率限制“嘈雜的鄰居”）以及配置為提供數據服務的一組 APN（接入點名稱）。該儀表板允許操作員查看配置的策略和 APN，編輯它們，以及創建和刪除它們。
+
+移動網絡上下文中的策略包括 QoS 配置文件和過濾規則（例如，阻止到某些 IP 地址的流量）。
+
+
+### Metrics
+
+正如第 3 章所討論的，Magma 被廣泛使用，因此幾乎可以從系統的每個部分收集指標。Magma 網關和 Orchestrator 生成指標以提供對網關、基站、用戶、可靠性、吞吐量等的可見性。這些指標定期推送到 Prometheus 提供的時間序列數據庫中。指標可以通過多種方式查詢和展示，網管為此提供了儀表板。
+
+用於探索和查看指標的儀表板由 Grafana 提供，Grafana 是一個功能齊全的分析平台，允許用戶創建自定義儀表板。Magma 帶有一些內置儀表板，如下圖所示，它顯示了 eNodeB 狀態、連接的用戶以及 AGW 的附加指標。
+
+
+![](https://github.com/andrewintw/introduction-to-magma/raw/main/06-The%20Network%20Management%20System/images/grafana_variables.png)
+
+Magma 支持的全套指標將隨著時間的推移而增加；當前集記錄在此處。有關 Grafana 的完整文檔以及如何自定義它，請參閱Grafana 文檔。
+
+
+### Alerts
+
+警報為操作員提供了一種方法，可以通知操作員網絡中需要注意的情況，例如性能問題故障。Magma 提供一組內置警報、一種自定義警報的方法以及將警報定向到其他系統（例如 Slack）的工具，以便可以傳遞適當的通知並採取措施解決問題。NMS 支持這些操作。
+
+預定義的警報包括：
+
+網關上的高 CPU 使用率
+UE 的不成功連接嘗試
+授權或認證失敗
+引導網關時的異常
+服務重新啟動。
+可以使用上面討論的指標配置自定義警報，並將它們與某些觸發器進行比較，例如可用內存低於閾值、磁盤利用率高於閾值等。
+
+
+### Call Tracing
+
+調用跟踪是 Magma 提供的一種重要的故障排除工具，可以從 NMS 或 Orchestrator API 啟動。調用跟踪在 AGW 的特定接口上啟動數據包捕獲；然後可以使用 Wireshark 等工具下載和分析捕獲的數據包。通過檢查捕獲的消息交換，可以診斷一系列可能影響連接和使用網絡的訂戶的問題。下圖（取自 Magma 文檔）顯示了 Wireshark 中顯示的跟踪示例。
+
+![](06-The%20Network%20Management%20System/images/example_of_a_trace_displayed_in_Wireshark.png)
+
+Wireshark 中顯示的跟踪示例
+
+
+~ END ~
